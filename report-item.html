@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report an item — Campus Lost &amp; Found</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="site-nav">
+    <div class="container">
+      <a class="brand" href="index.html">Campus Lost &amp; Found <span>desk</span></a>
+      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="dashboard.html">Browse items</a></li>
+        <li><a href="report-item.html" aria-current="page">Report an item</a></li>
+        <li><a href="login.html">Log out</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+
+      <div class="form-card" style="max-width:600px;">
+        <h2>Report an item</h2>
+        <p class="text-muted" style="margin-bottom:1.5rem;">
+          Use the same form whether you lost something or found something —
+          just tell us which below.
+        </p>
+
+        <form id="report-form" action="report-item.php" method="post" enctype="multipart/form-data" novalidate>
+
+          <!-- Lost vs Found: a plain radio pair, not a styled toggle, so it
+               stays obviously accessible and easy to read in the HTML -->
+          <div class="form-field">
+            <label>What are you reporting?</label>
+            <div class="form-row form-row-2">
+              <label style="font-weight:400; display:flex; align-items:center; gap:0.5rem;">
+                <input type="radio" name="report_type" value="lost" checked style="width:auto;" />
+                I lost an item
+              </label>
+              <label style="font-weight:400; display:flex; align-items:center; gap:0.5rem;">
+                <input type="radio" name="report_type" value="found" style="width:auto;" />
+                I found an item
+              </label>
+            </div>
+          </div>
+
+          <div class="form-field" id="field-item-name">
+            <label for="item_name">Item name</label>
+            <input type="text" id="item_name" name="item_name" placeholder="e.g. Black leather wallet" required />
+            <p class="error-message" role="alert"></p>
+          </div>
+
+          <div class="form-row form-row-2">
+            <div class="form-field" id="field-category">
+              <label for="category">Category</label>
+              <select id="category" name="category" required>
+                <option value="">Choose one</option>
+                <option value="electronics">Electronics</option>
+                <option value="accessories">Accessories</option>
+                <option value="documents">Documents / ID cards</option>
+                <option value="bags">Bags</option>
+                <option value="other">Other</option>
+              </select>
+              <p class="error-message" role="alert"></p>
+            </div>
+
+            <div class="form-field" id="field-date">
+              <label for="item_date">Date</label>
+              <input type="date" id="item_date" name="item_date" required />
+              <p class="error-message" role="alert"></p>
+            </div>
+          </div>
+
+          <div class="form-field" id="field-location">
+            <label for="location">Location</label>
+            <input type="text" id="location" name="location" placeholder="e.g. Library, 2nd floor" required />
+            <p class="error-message" role="alert"></p>
+          </div>
+
+          <div class="form-field" id="field-description">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" placeholder="Color, brand, distinguishing marks, contents..." required></textarea>
+            <p class="error-message" role="alert"></p>
+          </div>
+
+          <div class="form-field" id="field-image">
+            <label for="item_image">Photo <span class="text-muted">(optional)</span></label>
+            <input type="file" id="item_image" name="item_image" accept="image/jpeg,image/png,image/webp" />
+            <p class="hint">JPG, PNG or WEBP, up to 3 MB.</p>
+            <p class="error-message" role="alert"></p>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">Submit report</button>
+        </form>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>&copy; 2026 Campus Lost &amp; Found</span>
+      <span>Built as a student systems project</span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/validation.js"></script>
+</body>
+</html>

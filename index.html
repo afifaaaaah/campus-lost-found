@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus Lost &amp; Found</title>
+
+  <!-- Google Fonts: Fraunces (headings) + Inter (body/UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ============================ NAVIGATION ============================ -->
+  <header class="site-nav">
+    <div class="container">
+      <a class="brand" href="index.html">
+        Campus Lost &amp; Found <span>desk</span>
+      </a>
+
+      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+        &#9776;
+      </button>
+
+      <ul class="nav-links">
+        <li><a href="index.html" aria-current="page">Home</a></li>
+        <li><a href="dashboard.html">Browse items</a></li>
+        <li><a href="login.html">Log in</a></li>
+        <li><a href="register.html">Register</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- =============================== HERO ================================ -->
+  <section class="section">
+    <div class="container grid grid-2" style="align-items:center;">
+      <div>
+        <h1>Left something behind on campus?</h1>
+        <p>
+          Report it, search what other students have handed in, and get
+          connected with whoever finds it &mdash; all verified through the
+          campus Lost &amp; Found desk before anything changes hands.
+        </p>
+
+        <div class="flex-between" style="justify-content:flex-start; gap:1rem; margin-top:1.5rem;">
+          <a class="btn btn-primary" href="register.html">Report an item</a>
+          <a class="btn btn-outline" href="dashboard.html">Browse found items</a>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat">
+            <span class="num">1,204</span>
+            <span class="label">items reported this year</span>
+          </div>
+          <div class="stat">
+            <span class="num">812</span>
+            <span class="label">returned to their owner</span>
+          </div>
+          <div class="stat">
+            <span class="num">3</span>
+            <span class="label">campus desks verifying claims</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Simple claim-tag illustration reusing the .tag-card visual device -->
+      <div class="tag-card" style="max-width:320px; justify-self:end;">
+        <span class="status status-found">Found</span>
+        <h3>Black leather wallet</h3>
+        <p class="meta">Library, 2nd floor &middot; found 6 Aug</p>
+        <p class="text-muted" style="font-size:0.9rem;">
+          Contains a student ID and a few cards. Handed in to the front desk.
+        </p>
+        <a class="btn btn-accent btn-block" href="login.html">This might be mine</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= HOW IT WORKS =============================== -->
+  <section class="section" style="background:var(--color-paper-dim);">
+    <div class="container">
+      <h2>How a recovery actually happens</h2>
+      <p class="text-muted">
+        An item can find its way back to its owner through three different
+        paths &mdash; all of them end at the same verification step.
+      </p>
+
+      <div class="grid grid-3 mt-4">
+        <div>
+          <h3>Someone reports it found</h3>
+          <p>A student who found an item lists it, with where and when it turned up.</p>
+        </div>
+        <div>
+          <h3>&ldquo;I found this&rdquo;</h3>
+          <p>A finder can respond directly to an existing lost report instead of creating a new one.</p>
+        </div>
+        <div>
+          <h3>Handed to the desk</h3>
+          <p>Physically dropped-off items are logged by campus staff and matched the same way.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== FOOTER ================================ -->
+  <footer class="site-footer">
+    <div class="container">
+      <span>&copy; 2026 Campus Lost &amp; Found</span>
+      <span>Built as a student systems project</span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/validation.js"></script>
+</body>
+</html>

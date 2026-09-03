@@ -1,0 +1,527 @@
+/* =========================================================================
+   CAMPUS LOST & FOUND — SHARED STYLESHEET
+   =========================================================================
+   This one file styles every page in the site. It is organised into clear
+   sections so you can find (and explain) any rule quickly:
+
+   1. Design tokens (colors, fonts, spacing) — change these to re-theme
+      the whole site from one place.
+   2. Reset / base element styles
+   3. Layout helpers (container, grid)
+   4. Navigation bar
+   5. Buttons
+   6. Forms
+   7. Cards / item "claim tags"
+   8. Tables
+   9. Alerts / status badges
+   10. Footer
+   11. Responsive breakpoints
+   ========================================================================= */
+
+
+/* -------------------------------------------------------------------------
+   1. DESIGN TOKENS
+   CSS custom properties (variables). Every color, font and spacing value
+   used anywhere in the site is defined once here.
+   ---------------------------------------------------------------------- */
+:root {
+  /* Colors */
+  --color-ink: #1b2430;        /* primary text, nav background */
+  --color-paper: #f7f5ef;      /* page background */
+  --color-paper-dim: #efeae0;  /* slightly darker panels */
+  --color-line: #d9d2c3;       /* borders / dividers */
+  --color-muted: #6b6459;      /* secondary text */
+  --color-rust: #b8542f;       /* "lost" items, warnings */
+  --color-rust-dark: #8f3f22;
+  --color-teal: #2f6f63;       /* "found" items, success, verified */
+  --color-teal-dark: #23554b;
+  --color-amber: #d98e3f;      /* claims / pending state */
+  --color-white: #ffffff;
+
+  /* Typography */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+
+  /* Spacing scale — use these instead of arbitrary px values */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2.5rem;
+  --space-5: 4rem;
+
+  /* Shape */
+  --radius: 6px;
+  --border: 1px solid var(--color-line);
+}
+
+/* -------------------------------------------------------------------------
+   2. RESET / BASE STYLES
+   ---------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* Respect users who have asked for reduced motion */
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--color-ink);
+  background: var(--color-paper);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0 0 var(--space-2);
+  color: var(--color-ink);
+}
+
+h1 { font-size: clamp(2rem, 4vw, 3rem); }
+h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); }
+h3 { font-size: 1.25rem; }
+
+p {
+  margin: 0 0 var(--space-2);
+  max-width: 65ch; /* keeps body text readable */
+}
+
+a {
+  color: var(--color-teal-dark);
+}
+
+/* Visible keyboard focus everywhere — do not remove */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--color-amber);
+  outline-offset: 2px;
+}
+
+img { max-width: 100%; display: block; }
+
+/* -------------------------------------------------------------------------
+   3. LAYOUT HELPERS
+   ---------------------------------------------------------------------- */
+.container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 var(--space-3);
+}
+
+.section {
+  padding: var(--space-5) 0;
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (min-width: 720px) {
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* -------------------------------------------------------------------------
+   4. NAVIGATION BAR
+   ---------------------------------------------------------------------- */
+.site-nav {
+  background: var(--color-ink);
+  color: var(--color-white);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.site-nav .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--color-white);
+  text-decoration: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.brand span {
+  color: var(--color-amber);
+  font-size: 0.8rem;
+  font-family: var(--font-body);
+}
+
+.nav-links {
+  display: flex;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 0.95rem;
+  padding: 0.25rem 0;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.nav-links a:hover,
+.nav-links a[aria-current="page"] {
+  color: var(--color-white);
+  border-bottom-color: var(--color-amber);
+}
+
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--color-white);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* Mobile nav — collapsed by default, JS toggles .is-open */
+@media (max-width: 719px) {
+  .nav-toggle { display: block; }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    background: var(--color-ink);
+    padding: var(--space-2) var(--space-3) var(--space-3);
+    gap: var(--space-2);
+  }
+
+  .nav-links.is-open { display: flex; }
+}
+
+/* -------------------------------------------------------------------------
+   5. BUTTONS
+   ---------------------------------------------------------------------- */
+.btn {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.7rem 1.4rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: transform 0.1s ease, background 0.15s ease;
+}
+
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: var(--color-ink);
+  color: var(--color-white);
+}
+.btn-primary:hover { background: #2a3748; }
+
+.btn-accent {
+  background: var(--color-amber);
+  color: var(--color-ink);
+}
+.btn-accent:hover { background: #c67d31; }
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+.btn-outline:hover { background: var(--color-ink); color: var(--color-white); }
+
+.btn-block { display: block; width: 100%; }
+
+/* -------------------------------------------------------------------------
+   6. FORMS
+   ---------------------------------------------------------------------- */
+.form-card {
+  background: var(--color-white);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.form-field {
+  margin-bottom: var(--space-3);
+}
+
+.form-field label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+}
+
+.form-field .hint {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  margin-top: 0.3rem;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.form-field textarea { min-height: 100px; resize: vertical; }
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  border-color: var(--color-ink);
+}
+
+/* Error state — JavaScript adds/removes .has-error */
+.form-field.has-error input,
+.form-field.has-error select,
+.form-field.has-error textarea {
+  border-color: var(--color-rust);
+}
+
+.form-field .error-message {
+  display: none;
+  color: var(--color-rust-dark);
+  font-size: 0.82rem;
+  margin-top: 0.35rem;
+}
+
+.form-field.has-error .error-message {
+  display: block;
+}
+
+.form-row {
+  display: grid;
+  gap: var(--space-2);
+}
+
+@media (min-width: 480px) {
+  .form-row-2 { grid-template-columns: 1fr 1fr; }
+}
+
+/* -------------------------------------------------------------------------
+   7. CARDS / ITEM "CLAIM TAGS"
+   The one distinctive visual device in this design: item listings look
+   like a physical claim tag, with a notch cut out of the top-left corner
+   (made with clip-path) rather than a generic rounded card.
+   ---------------------------------------------------------------------- */
+.tag-card {
+  background: var(--color-white);
+  border: var(--border);
+  border-radius: 0 var(--radius) var(--radius) var(--radius);
+  padding: var(--space-3);
+  position: relative;
+  clip-path: polygon(
+    18px 0, 100% 0, 100% 100%, 0 100%, 0 18px
+  );
+}
+
+.tag-card::before {
+  /* small hole punch, like a real luggage tag */
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 8px;
+  height: 8px;
+  background: var(--color-paper);
+  border-radius: 50%;
+  border: 1px solid var(--color-line);
+}
+
+.tag-card .status {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  margin-bottom: 0.6rem;
+}
+
+.status-lost { background: #f4e1d8; color: var(--color-rust-dark); }
+.status-found { background: #dcece7; color: var(--color-teal-dark); }
+.status-claimed { background: #f2e5cf; color: #8a5c1e; }
+
+.tag-card h3 { margin-bottom: 0.25rem; }
+
+.tag-card .meta {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  margin-bottom: var(--space-2);
+}
+
+/* -------------------------------------------------------------------------
+   8. TABLES
+   Used on the dashboard to list "My Reports" and on the admin screen.
+   ---------------------------------------------------------------------- */
+.table-wrap {
+  overflow-x: auto; /* allow horizontal scroll on small screens instead
+                        of breaking the layout */
+  border: var(--border);
+  border-radius: var(--radius);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-white);
+  font-size: 0.92rem;
+}
+
+thead th {
+  text-align: left;
+  font-family: var(--font-body);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  background: var(--color-paper-dim);
+  border-bottom: var(--border);
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #fbfaf7; }
+
+.table-actions a,
+.table-actions button {
+  font-size: 0.85rem;
+  margin-right: 0.6rem;
+  background: none;
+  border: none;
+  color: var(--color-teal-dark);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.table-actions .danger { color: var(--color-rust-dark); }
+
+/* -------------------------------------------------------------------------
+   9. ALERTS / BADGES
+   ---------------------------------------------------------------------- */
+.alert {
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  border: 1px solid;
+  font-size: 0.92rem;
+  margin-bottom: var(--space-3);
+}
+
+.alert-error {
+  background: #fbe9e3;
+  border-color: var(--color-rust);
+  color: var(--color-rust-dark);
+}
+
+.alert-success {
+  background: #e3efeb;
+  border-color: var(--color-teal);
+  color: var(--color-teal-dark);
+}
+
+/* -------------------------------------------------------------------------
+   10. FOOTER
+   ---------------------------------------------------------------------- */
+.site-footer {
+  border-top: var(--border);
+  padding: var(--space-3) 0;
+  margin-top: var(--space-5);
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.site-footer .container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+/* -------------------------------------------------------------------------
+   11. STATS ROW (used on the home page hero)
+   ---------------------------------------------------------------------- */
+.stats-row {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-top: var(--space-3);
+}
+
+.stat .num {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--color-ink);
+  display: block;
+}
+
+.stat .label {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+/* -------------------------------------------------------------------------
+   Utility classes
+   ---------------------------------------------------------------------- */
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.text-muted { color: var(--color-muted); }
+.mt-4 { margin-top: var(--space-4); }
+.mb-0 { margin-bottom: 0; }

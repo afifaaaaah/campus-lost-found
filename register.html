@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — Campus Lost &amp; Found</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="site-nav">
+    <div class="container">
+      <a class="brand" href="index.html">Campus Lost &amp; Found <span>desk</span></a>
+      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="dashboard.html">Browse items</a></li>
+        <li><a href="login.html">Log in</a></li>
+        <li><a href="register.html" aria-current="page">Register</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+
+      <div class="form-card" style="max-width:520px;">
+        <h2>Create your account</h2>
+        <p class="text-muted" style="margin-bottom:1.5rem;">
+          Use your campus email so the desk can verify who you are when you
+          come to collect an item.
+        </p>
+
+        <form id="register-form" action="register.php" method="post" novalidate>
+
+          <div class="form-field" id="field-full-name">
+            <label for="full_name">Full name</label>
+            <input type="text" id="full_name" name="full_name" autocomplete="name" required />
+            <p class="error-message" role="alert"></p>
+          </div>
+
+          <div class="form-field" id="field-email">
+            <label for="email">Campus email</label>
+            <input type="email" id="email" name="email" placeholder="you@university.edu" autocomplete="email" required />
+            <p class="error-message" role="alert"></p>
+          </div>
+
+          <div class="form-field" id="field-phone">
+            <label for="phone">Phone number <span class="text-muted">(optional)</span></label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="+91 98765 43210" />
+            <p class="hint">Used only if a finder needs to reach you about a match.</p>
+            <p class="error-message" role="alert"></p>
+          </div>
+
+          <div class="form-row form-row-2">
+            <div class="form-field" id="field-password">
+              <label for="password">Password</label>
+              <input type="password" id="password" name="password" autocomplete="new-password" required />
+              <p class="hint">At least 8 characters, one letter and one number.</p>
+              <p class="error-message" role="alert"></p>
+            </div>
+
+            <div class="form-field" id="field-confirm-password">
+              <label for="confirm_password">Confirm password</label>
+              <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required />
+              <p class="error-message" role="alert"></p>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">Create account</button>
+        </form>
+
+        <p class="text-muted" style="margin-top:1.25rem; font-size:0.9rem;">
+          Already registered? <a href="login.html">Log in</a>
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>&copy; 2026 Campus Lost &amp; Found</span>
+      <span>Built as a student systems project</span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/validation.js"></script>
+</body>
+</html>

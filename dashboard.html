@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Campus Lost &amp; Found</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="site-nav">
+    <div class="container">
+      <a class="brand" href="index.html">Campus Lost &amp; Found <span>desk</span></a>
+      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="dashboard.html" aria-current="page">Browse items</a></li>
+        <li><a href="report-item.html">Report an item</a></li>
+        <li><a href="login.html">Log out</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <section class="section" style="padding-bottom:1rem;">
+    <div class="container">
+      <div class="flex-between">
+        <div>
+          <h1 style="font-size:1.8rem;">Hi, Afifa</h1>
+          <p class="text-muted mb-0">Here's what's been reported across campus recently.</p>
+        </div>
+        <a class="btn btn-accent" href="report-item.html">+ Report an item</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ SEARCH / FILTER =============================
+       This is a client-side demo (see js/main.js -> initDashboardFilters).
+       In the working app, submitting these same fields will run a PHP
+       query with a WHERE clause instead — the fields themselves don't
+       change, only what happens when they're used.
+  -->
+  <section class="section" style="padding-top:0.5rem; padding-bottom:0.5rem;">
+    <div class="container">
+      <div class="form-card" style="max-width:none;">
+        <div class="form-row" style="grid-template-columns: 2fr 1fr 1fr; align-items:end;">
+
+          <div class="form-field mb-0">
+            <label for="search-input">Search by item name</label>
+            <input type="text" id="search-input" placeholder="e.g. wallet, umbrella, ID card" />
+          </div>
+
+          <div class="form-field mb-0">
+            <label for="filter-category">Category</label>
+            <select id="filter-category">
+              <option value="all">All categories</option>
+              <option value="electronics">Electronics</option>
+              <option value="accessories">Accessories</option>
+              <option value="documents">Documents / ID cards</option>
+              <option value="bags">Bags</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-field mb-0">
+            <label for="filter-status">Status</label>
+            <select id="filter-status">
+              <option value="all">All statuses</option>
+              <option value="lost">Lost</option>
+              <option value="found">Found</option>
+              <option value="claimed">Claimed</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ ITEM TAG CARDS =============================== -->
+  <section class="section">
+    <div class="container">
+      <h2 style="font-size:1.4rem;">Recently reported</h2>
+      <div class="grid grid-3 mt-4">
+
+        <div class="tag-card">
+          <span class="status status-lost">Lost</span>
+          <h3>Black Wallet</h3>
+          <p class="meta">Library &middot; 5 Aug 2026</p>
+          <p style="font-size:0.9rem;">Small black leather wallet, has a student card inside.</p>
+          <a class="btn btn-outline btn-block" href="#">I found this item</a>
+        </div>
+
+        <div class="tag-card">
+          <span class="status status-found">Found</span>
+          <h3>Black Leather Wallet</h3>
+          <p class="meta">Library &middot; 6 Aug 2026</p>
+          <p style="font-size:0.9rem;">Found near the reading room. Handed to the front desk.</p>
+          <a class="btn btn-outline btn-block" href="#">This might be mine</a>
+        </div>
+
+        <div class="tag-card">
+          <span class="status status-claimed">Claimed</span>
+          <h3>Blue Umbrella</h3>
+          <p class="meta">Cafeteria &middot; 2 Aug 2026</p>
+          <p style="font-size:0.9rem;">Claim verified by the Lost &amp; Found desk on 4 Aug.</p>
+          <a class="btn btn-outline btn-block" href="#" aria-disabled="true">Resolved</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== MY REPORTS TABLE ============================= -->
+  <section class="section" style="padding-top:0;">
+    <div class="container">
+      <h2 style="font-size:1.4rem;">My reports</h2>
+
+      <div class="table-wrap mt-4">
+        <table>
+          <caption class="sr-only" style="position:absolute; left:-9999px;">
+            List of items you have reported, with their current status
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Item</th>
+              <th scope="col">Category</th>
+              <th scope="col">Type</th>
+              <th scope="col">Date</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="items-table-body">
+            <tr data-name="black wallet" data-category="accessories" data-status="lost">
+              <td>Black Wallet</td>
+              <td>Accessories</td>
+              <td>Lost</td>
+              <td>5 Aug 2026</td>
+              <td><span class="status status-lost">Lost</span></td>
+              <td class="table-actions">
+                <a href="report-item.html">Edit</a>
+                <button type="button" class="danger">Delete</button>
+              </td>
+            </tr>
+            <tr data-name="university id card" data-category="documents" data-status="found">
+              <td>University ID Card</td>
+              <td>Documents</td>
+              <td>Found</td>
+              <td>1 Aug 2026</td>
+              <td><span class="status status-found">Found</span></td>
+              <td class="table-actions">
+                <a href="report-item.html">Edit</a>
+                <button type="button" class="danger">Delete</button>
+              </td>
+            </tr>
+            <tr data-name="blue umbrella" data-category="other" data-status="claimed">
+              <td>Blue Umbrella</td>
+              <td>Other</td>
+              <td>Found</td>
+              <td>2 Aug 2026</td>
+              <td><span class="status status-claimed">Claimed</span></td>
+              <td class="table-actions">
+                <span class="text-muted">Resolved</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p id="no-results" class="text-muted" style="display:none; margin-top:1rem;">
+        No reports match your search or filters.
+      </p>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>&copy; 2026 Campus Lost &amp; Found</span>
+      <span>Built as a student systems project</span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/validation.js"></script>
+</body>
+</html>

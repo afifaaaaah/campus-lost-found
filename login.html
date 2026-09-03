@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log in — Campus Lost &amp; Found</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="site-nav">
+    <div class="container">
+      <a class="brand" href="index.html">Campus Lost &amp; Found <span>desk</span></a>
+      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="dashboard.html">Browse items</a></li>
+        <li><a href="login.html" aria-current="page">Log in</a></li>
+        <li><a href="register.html">Register</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+
+      <div class="form-card">
+        <h2>Welcome back</h2>
+        <p class="text-muted" style="margin-bottom:1.5rem;">
+          Log in to report an item, check your claims, or view your reports.
+        </p>
+
+        <!--
+          method="post" and action="login.php" are where the PHP backend
+          will receive this form later. For now, submitting this page just
+          reloads it (there's no PHP running yet) — that's expected.
+        -->
+        <form id="login-form" action="login.php" method="post" novalidate>
+
+          <div class="form-field" id="field-login-email">
+            <label for="login_email">Email</label>
+            <input
+              type="email"
+              id="login_email"
+              name="email"
+              placeholder="you@university.edu"
+              autocomplete="email"
+              required
+            />
+            <p class="error-message" role="alert"></p>
+          </div>
+
+          <div class="form-field" id="field-login-password">
+            <label for="login_password">Password</label>
+            <input
+              type="password"
+              id="login_password"
+              name="password"
+              autocomplete="current-password"
+              required
+            />
+            <p class="error-message" role="alert"></p>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">Log in</button>
+        </form>
+
+        <p class="text-muted" style="margin-top:1.25rem; font-size:0.9rem;">
+          New here? <a href="register.html">Create an account</a>
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>&copy; 2026 Campus Lost &amp; Found</span>
+      <span>Built as a student systems project</span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/validation.js"></script>
+</body>
+</html>
