@@ -1,3 +1,6 @@
+<?php
+require 'auth-check.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,9 +23,9 @@
       <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
-        <li><a href="dashboard.html">Browse items</a></li>
-        <li><a href="report-item.html" aria-current="page">Report an item</a></li>
-        <li><a href="login.html">Log out</a></li>
+        <li><a href="dashboard.php">Browse items</a></li>
+        <li><a href="report-item.php" aria-current="page">Report an item</a></li>
+        <li><a href="logout.php">Log out</a></li>
       </ul>
     </div>
   </header>
@@ -37,10 +40,8 @@
           just tell us which below.
         </p>
 
-        <form id="report-form" action="report-item.php" method="post" enctype="multipart/form-data" novalidate>
+        <form id="report-form" action="report-item-save.php" method="post" enctype="multipart/form-data" novalidate>
 
-          <!-- Lost vs Found: a plain radio pair, not a styled toggle, so it
-               stays obviously accessible and easy to read in the HTML -->
           <div class="form-field">
             <label>What are you reporting?</label>
             <div class="form-row form-row-2">
