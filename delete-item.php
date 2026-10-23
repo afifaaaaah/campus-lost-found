@@ -1,38 +1,39 @@
 <?php
-// delete-item.php — deletes ONLY the current user's own item.
-// Only accepts POST, never GET, so a stray link or crawler can never
-// trigger a delete just by being visited.
+// delete-item.php — delete ONE of your own reports.
+// POST only (never GET) and CSRF-protected, so a stray link or a malicious
+// web page can never trigger a delete.
 
-require 'auth-check.php';
-require 'db.php';
+require_once 'auth-check.php';
+require_once 'db.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: dashboard.php');
-    exit;
+    redirect('dashboard.php');
 }
+verify_csrf();
 
 $itemId = (int) ($_POST['item_id'] ?? 0);
 
-// Fetch first so we can check ownership AND get the image path to delete.
 $stmt = $pdo->prepare('SELECT * FROM items WHERE item_id = ?');
 $stmt->execute([$itemId]);
 $item = $stmt->fetch();
 
-if ($item && $item['user_id'] === $_SESSION['user_id']) {
+// Allowed only for your own item, and not while a claim is being handled
+// (status matched / claimed) — the admin owns it during that window.
+$canDelete = $item
+    && (int) $item['user_id'] === current_user_id()
+    && in_array($item['status'], ['active', 'resolved', 'closed'], true);
 
-    // Delete the row. Any claims pointing at it are removed automatically
-    // by the ON DELETE CASCADE foreign key we set up in the schema.
-    $deleteStmt = $pdo->prepare('DELETE FROM items WHERE item_id = ? AND user_id = ?');
-    $deleteStmt->execute([$itemId, $_SESSION['user_id']]);
+if ($canDelete) {
+    // user_id in the WHERE clause = second, independent ownership guard
+    $delete = $pdo->prepare('DELETE FROM items WHERE item_id = ? AND user_id = ?');
+    $delete->execute([$itemId, current_user_id()]);
 
-    // Clean up the uploaded image file too, if there was one, so we don't
-    // accumulate orphaned files with no database row pointing to them.
-    if ($item['image_path'] && file_exists(__DIR__ . '/' . $item['image_path'])) {
-        unlink(__DIR__ . '/' . $item['image_path']);
+    if ($delete->rowCount() === 1) {
+        delete_image_file($item['image_path']);     // tidy up the photo too
+        flash_set('success', 'Your report was deleted.');
     }
+} else {
+    flash_set('error', "That report can't be deleted right now. If a claim is in progress, the desk is handling it.");
 }
-// If the item doesn't exist or isn't theirs, we silently do nothing —
-// no error message needed, the end result (item not in their list) is the same.
 
-header('Location: dashboard.php?deleted=1');
-exit;
+redirect('dashboard.php');

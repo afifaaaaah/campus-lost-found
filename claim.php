@@ -1,93 +1,71 @@
 <?php
-// claim.php — shown when someone clicks "Claim this item" on a found listing.
-// GET request: show the item + a reason form.
-// POST request: record the claim and lock the item.
+// claim.php — someone clicks "Claim this item" on a FOUND listing.
+//   GET  -> show the item and a "why is it yours?" form
+//   POST -> record the claim and lock the item for admin review
 
-require 'auth-check.php';
-require 'db.php';
+require_once 'auth-check.php';
+require_once 'db.php';
 
 $itemId = (int) ($_GET['item_id'] ?? $_POST['item_id'] ?? 0);
 
-// --- Load the item being claimed ---
+/** Show a message and go back to the dashboard. */
+function bounce(string $message): void
+{
+    flash_set('error', $message);
+    redirect('dashboard.php');
+}
+
 $stmt = $pdo->prepare('SELECT * FROM items WHERE item_id = ?');
 $stmt->execute([$itemId]);
 $item = $stmt->fetch();
 
-if (!$item) {
-    echo "That item doesn't exist. <a href='dashboard.php'>Back to dashboard</a>.";
-    exit;
-}
+if (!$item)                                          bounce("That item doesn't exist.");
+if ($item['item_type'] !== 'found')                  bounce('Only found items can be claimed.');
+if ((int) $item['user_id'] === current_user_id())    bounce("You can't claim an item you reported yourself.");
+if ($item['status'] !== 'active')                    bounce('This item already has a claim in progress, or has been resolved.');
 
-if ($item['item_type'] !== 'found') {
-    echo "Only found items can be claimed. <a href='dashboard.php'>Back to dashboard</a>.";
-    exit;
-}
-
-if ($item['user_id'] === $_SESSION['user_id']) {
-    echo "You can't claim an item you reported yourself. <a href='dashboard.php'>Back to dashboard</a>.";
-    exit;
-}
-
-// This is the check that solves "what if two people try to claim the same
-// item" — the FIRST person to successfully submit a claim moves the item
-// out of 'active', so this check blocks everyone after them.
-if ($item['status'] !== 'active') {
-    echo "This item already has a claim pending review, or has been resolved. <a href='dashboard.php'>Back to dashboard</a>.";
-    exit;
-}
-
-// --- Handle the claim submission ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $claimReason = trim($_POST['claim_reason'] ?? '');
+    verify_csrf();
 
-    if (strlen($claimReason) < 10) {
-        echo "Please describe why this item is yours (at least 10 characters). <a href='javascript:history.back()'>Go back</a>.";
-        exit;
+    $claimReason = post_value('claim_reason');
+    if (mb_strlen($claimReason) < 10 || mb_strlen($claimReason) > 1000) {
+        flash_set('error', 'Describe why this item is yours (10 to 1000 characters).');
+        remember_input(['claim_reason' => $claimReason]);
+        redirect('claim.php?item_id=' . $itemId);
     }
 
-    // Insert the claim...
-    $insertStmt = $pdo->prepare(
-        'INSERT INTO claims (item_id, claimant_id, claim_reason, claim_status) VALUES (?, ?, ?, ?)'
+    // A transaction = "all of these steps happen, or none of them do".
+    $pdo->beginTransaction();
+
+    // STEP 1 — try to lock the item. The WHERE ... status = 'active' makes
+    // this atomic: if two students click Submit at the same instant, the
+    // database lets exactly ONE of these UPDATEs change a row. The other
+    // updates zero rows and is turned away below. No messaging needed.
+    $lock = $pdo->prepare("UPDATE items SET status = 'matched' WHERE item_id = ? AND status = 'active'");
+    $lock->execute([$itemId]);
+
+    if ($lock->rowCount() !== 1) {
+        $pdo->rollBack();
+        bounce('Someone else just claimed this item. It is now under review.');
+    }
+
+    // STEP 2 — record the claim
+    $insert = $pdo->prepare(
+        "INSERT INTO claims (item_id, claimant_id, claim_reason, claim_status) VALUES (?, ?, ?, 'pending')"
     );
-    $insertStmt->execute([$itemId, $_SESSION['user_id'], $claimReason, 'pending']);
+    $insert->execute([$itemId, current_user_id(), $claimReason]);
 
-    // ...and immediately lock the item so nobody else can claim it while
-    // this claim is being reviewed at the admin desk.
-    $updateStmt = $pdo->prepare('UPDATE items SET status = ? WHERE item_id = ?');
-    $updateStmt->execute(['matched', $itemId]);
+    $pdo->commit();
 
-    header('Location: dashboard.php?claimed=1');
-    exit;
+    flash_set('success', 'Your claim was submitted. Bring your student ID to the Lost & Found desk to complete verification.');
+    redirect('dashboard.php#my-claims');
 }
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claim item — Campus Lost &amp; Found</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
-  <link rel="stylesheet" href="css/style.css" />
-</head>
-<body>
 
-  <header class="site-nav">
-    <div class="container">
-      <a class="brand" href="index.html">Campus Lost &amp; Found <span>desk</span></a>
-      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="dashboard.php">Browse items</a></li>
-        <li><a href="report-item.php">Report an item</a></li>
-        <li><a href="logout.php">Log out</a></li>
-      </ul>
-    </div>
-  </header>
+$old        = pull_old();
+$pageTitle  = 'Claim item';
+$activePage = '';
+require 'header.php';
+?>
 
   <section class="section">
     <div class="container">
@@ -96,44 +74,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h2>Claim this item</h2>
 
         <div class="tag-card" style="margin-bottom:1.5rem;">
+          <?php if ($item['image_path']): ?>
+            <img class="item-photo" src="<?php echo h($item['image_path']); ?>" alt="Photo of <?php echo h($item['item_name']); ?>" />
+          <?php endif; ?>
           <span class="status status-found">Found</span>
-          <h3><?php echo htmlspecialchars($item['item_name']); ?></h3>
-          <p class="meta">
-            <?php echo htmlspecialchars($item['location']); ?> &middot;
-            <?php echo htmlspecialchars($item['item_date']); ?>
-          </p>
-          <p style="font-size:0.9rem;"><?php echo htmlspecialchars($item['description']); ?></p>
+          <h3><?php echo h($item['item_name']); ?></h3>
+          <p class="meta"><?php echo h($item['location']); ?> &middot; <?php echo h(fmt_date($item['item_date'])); ?></p>
+          <p style="font-size:0.9rem;"><?php echo h($item['description']); ?></p>
         </div>
 
         <p class="text-muted" style="margin-bottom:1.5rem;">
-          Describe why you believe this item is yours. If your claim looks
-          credible, bring your student ID to the Lost &amp; Found desk to
-          collect it — the desk staff will do the final verification in person.
+          Describe why you believe this item is yours &mdash; something only the
+          owner would know. If your claim looks credible, bring your student ID
+          to the Lost &amp; Found desk; the staff do the final check in person.
         </p>
 
         <form method="post" action="claim.php">
+          <?php echo csrf_field(); ?>
           <input type="hidden" name="item_id" value="<?php echo (int) $item['item_id']; ?>" />
 
           <div class="form-field">
             <label for="claim_reason">Why is this item yours?</label>
             <textarea id="claim_reason" name="claim_reason" required
-              placeholder="e.g. Describe a mark, contents, or where exactly you lost it"></textarea>
+              placeholder="e.g. a mark, the contents, where exactly you lost it"><?php echo h($old['claim_reason'] ?? ''); ?></textarea>
           </div>
 
           <button type="submit" class="btn btn-primary btn-block">Submit claim</button>
+          <p style="margin-top:1rem; text-align:center;"><a href="dashboard.php">Cancel</a></p>
         </form>
       </div>
 
     </div>
   </section>
 
-  <footer class="site-footer">
-    <div class="container">
-      <span>&copy; 2026 Campus Lost &amp; Found</span>
-      <span>Built as a student systems project</span>
-    </div>
-  </footer>
-
-  <script src="js/main.js"></script>
-</body>
-</html>
+<?php require 'footer.php'; ?>

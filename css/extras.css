@@ -1,0 +1,342 @@
+/* =========================================================================
+   EXTRAS.CSS — styles added in the final phase
+   =========================================================================
+   Loaded AFTER style.css (see header.php), so these rules build on the
+   same design tokens (--color-ink, --space-3 ...) without touching the
+   original file.
+
+   1. Flash messages
+   2. Status badges (everywhere, not only inside cards)
+   3. Item photos
+   4. Slide-in account menu  (the three-line button)
+   5. Buttons (small / success / danger)
+   6. Admin panel layout
+   ========================================================================= */
+
+
+/* -------------------------------------------------------------------------
+   1. FLASH MESSAGES
+   ---------------------------------------------------------------------- */
+.flash-wrap {
+  padding-top: var(--space-2);
+}
+
+.flash-wrap .alert {
+  margin-bottom: 0.5rem;
+}
+
+
+/* -------------------------------------------------------------------------
+   2. STATUS BADGES
+   style.css only styled badges inside .tag-card; tables need them too.
+   ---------------------------------------------------------------------- */
+.status {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.status-pending  { background: #f2e5cf; color: #8a5c1e; }
+.status-approved { background: #dcece7; color: var(--color-teal-dark); }
+.status-rejected { background: #f4e1d8; color: var(--color-rust-dark); }
+.status-resolved { background: #e4e8ee; color: #3a4656; }
+.status-closed   { background: #ebe8e1; color: var(--color-muted); }
+
+
+/* -------------------------------------------------------------------------
+   3. ITEM PHOTOS
+   The photo bleeds to the edges of the claim-tag card; the card's notched
+   corner (clip-path) trims it automatically.
+   ---------------------------------------------------------------------- */
+.tag-card .item-photo {
+  display: block;
+  width: calc(100% + 3rem);
+  max-width: none;
+  height: 170px;
+  object-fit: cover;
+  margin: calc(-1 * var(--space-3)) calc(-1 * var(--space-3)) var(--space-2);
+  background: var(--color-paper-dim);
+}
+
+.photo-preview {
+  width: 100%;
+  max-width: 240px;
+  height: 160px;
+  object-fit: cover;
+  border: var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 0.5rem;
+}
+
+
+/* -------------------------------------------------------------------------
+   4. SLIDE-IN ACCOUNT MENU
+   Three pieces: the button, a dimmed backdrop, and the panel itself.
+   JavaScript (menu.js) only toggles the .is-open / .is-visible classes;
+   every bit of motion below is a CSS transition.
+   ---------------------------------------------------------------------- */
+.site-nav .nav-bar {
+  justify-content: flex-start;
+  gap: var(--space-2);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+/* The three-line button */
+.menu-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  margin-left: -0.6rem;
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.menu-btn span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--color-white);
+  border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.2s ease;
+}
+
+/* When open, the three lines morph into an X */
+.menu-btn.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.menu-btn.is-open span:nth-child(2) { opacity: 0; }
+.menu-btn.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Dimmed page behind the panel (sits BELOW the nav bar, so the button
+   stays clickable while the menu is open) */
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 36, 48, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+  z-index: 40;
+}
+
+.menu-backdrop.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease, visibility 0s;
+}
+
+/* The panel. Parked off-screen to the left (translateX(-100%)), then
+   slid into view. visibility:hidden while closed stops keyboard users
+   tabbing into links they can't see. */
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(290px, 85vw);
+  display: flex;
+  flex-direction: column;
+  padding: 4.5rem 0 var(--space-3); /* top padding keeps links below the nav bar */
+  background: var(--color-ink);
+  box-shadow: 6px 0 24px rgba(0, 0, 0, 0.25);
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform 0.3s ease, visibility 0s linear 0.3s;
+  z-index: 45; /* above the backdrop (40), below the nav bar (50) */
+  overflow-y: auto;
+}
+
+.side-menu.is-open {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform 0.3s ease, visibility 0s;
+}
+
+.menu-user {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--space-3) var(--space-2);
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--color-white);
+}
+
+.menu-user span {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.side-menu a {
+  display: block;
+  padding: 0.8rem var(--space-3);
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  /* links fade in just after the panel starts sliding */
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity 0.25s ease 0.1s, transform 0.25s ease 0.1s,
+              background 0.15s ease, border-color 0.15s ease;
+}
+
+.side-menu.is-open a {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.side-menu a:hover,
+.side-menu a[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.08);
+  border-left-color: var(--color-amber);
+  color: var(--color-white);
+}
+
+/* Sign out sits at the bottom of the panel */
+.side-menu .menu-signout {
+  margin: auto var(--space-3) 0;
+  padding: 0.7rem 1rem;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius);
+}
+
+.side-menu .menu-signout:hover {
+  background: var(--color-amber);
+  border-color: var(--color-amber);
+  color: var(--color-ink);
+}
+
+body.menu-open {
+  overflow: hidden; /* no page scrolling behind an open menu */
+}
+
+
+/* -------------------------------------------------------------------------
+   5. BUTTONS
+   ---------------------------------------------------------------------- */
+.btn-sm {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.btn-success {
+  background: var(--color-teal);
+  color: var(--color-white);
+}
+.btn-success:hover { background: var(--color-teal-dark); }
+
+.btn-danger {
+  background: var(--color-rust);
+  color: var(--color-white);
+}
+.btn-danger:hover { background: var(--color-rust-dark); }
+
+.inline-form {
+  display: inline;
+}
+
+
+/* -------------------------------------------------------------------------
+   6. ADMIN PANEL + SMALL LAYOUT HELPERS
+   ---------------------------------------------------------------------- */
+.stat-grid {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 720px) {
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.stat-card {
+  background: var(--color-white);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+}
+
+.stat-card .num {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.stat-card .label {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.stat-card.needs-attention {
+  border-color: var(--color-amber);
+  background: #fdf6ea;
+}
+
+/* One pending claim = one panel: item on the left, claimant + decision on the right */
+.claim-panel {
+  display: grid;
+  gap: var(--space-3);
+  background: var(--color-white);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+@media (min-width: 800px) {
+  .claim-panel { grid-template-columns: 1fr 1fr; }
+}
+
+.claim-panel h3 { margin-bottom: 0.25rem; }
+
+.claim-panel dl {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.claim-panel dt {
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.claim-panel dd { margin: 0; }
+
+.claim-decision {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: var(--space-2);
+}
+
+.claim-decision input[type="text"] {
+  flex: 1 1 100%;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-paper);
+}
+
+.empty-note {
+  padding: var(--space-3);
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius);
+  color: var(--color-muted);
+  background: var(--color-white);
+}
+
+.section-tight { padding: var(--space-4) 0 0; }
+
+.table-wrap td.wrap { white-space: normal; min-width: 180px; }

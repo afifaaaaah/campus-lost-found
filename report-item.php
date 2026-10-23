@@ -1,34 +1,12 @@
 <?php
-require 'auth-check.php';
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Report an item — Campus Lost &amp; Found</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
-  <link rel="stylesheet" href="css/style.css" />
-</head>
-<body>
+require_once 'auth-check.php';
 
-  <header class="site-nav">
-    <div class="container">
-      <a class="brand" href="index.html">Campus Lost &amp; Found <span>desk</span></a>
-      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="dashboard.php">Browse items</a></li>
-        <li><a href="report-item.php" aria-current="page">Report an item</a></li>
-        <li><a href="logout.php">Log out</a></li>
-      </ul>
-    </div>
-  </header>
+$old        = pull_old();                         // what they typed if the last attempt failed
+$oldType    = $old['report_type'] ?? 'lost';
+$pageTitle  = 'Report an item';
+$activePage = 'report';
+require 'header.php';
+?>
 
   <section class="section">
     <div class="container">
@@ -36,21 +14,24 @@ require 'auth-check.php';
       <div class="form-card" style="max-width:600px;">
         <h2>Report an item</h2>
         <p class="text-muted" style="margin-bottom:1.5rem;">
-          Use the same form whether you lost something or found something —
+          Use the same form whether you lost something or found something &mdash;
           just tell us which below.
         </p>
 
         <form id="report-form" action="report-item-save.php" method="post" enctype="multipart/form-data" novalidate>
+          <?php echo csrf_field(); ?>
 
           <div class="form-field">
             <label>What are you reporting?</label>
             <div class="form-row form-row-2">
               <label style="font-weight:400; display:flex; align-items:center; gap:0.5rem;">
-                <input type="radio" name="report_type" value="lost" checked style="width:auto;" />
+                <input type="radio" name="report_type" value="lost"
+                       <?php echo $oldType === 'lost' ? 'checked' : ''; ?> style="width:auto;" />
                 I lost an item
               </label>
               <label style="font-weight:400; display:flex; align-items:center; gap:0.5rem;">
-                <input type="radio" name="report_type" value="found" style="width:auto;" />
+                <input type="radio" name="report_type" value="found"
+                       <?php echo $oldType === 'found' ? 'checked' : ''; ?> style="width:auto;" />
                 I found an item
               </label>
             </div>
@@ -58,7 +39,8 @@ require 'auth-check.php';
 
           <div class="form-field" id="field-item-name">
             <label for="item_name">Item name</label>
-            <input type="text" id="item_name" name="item_name" placeholder="e.g. Black leather wallet" required />
+            <input type="text" id="item_name" name="item_name" placeholder="e.g. Black leather wallet"
+                   value="<?php echo h($old['item_name'] ?? ''); ?>" required />
             <p class="error-message" role="alert"></p>
           </div>
 
@@ -67,38 +49,42 @@ require 'auth-check.php';
               <label for="category">Category</label>
               <select id="category" name="category" required>
                 <option value="">Choose one</option>
-                <option value="electronics">Electronics</option>
-                <option value="accessories">Accessories</option>
-                <option value="documents">Documents / ID cards</option>
-                <option value="bags">Bags</option>
-                <option value="other">Other</option>
+                <?php foreach (CATEGORIES as $value => $label): ?>
+                  <option value="<?php echo h($value); ?>"
+                    <?php echo ($old['category'] ?? '') === $value ? 'selected' : ''; ?>>
+                    <?php echo h($label); ?>
+                  </option>
+                <?php endforeach; ?>
               </select>
               <p class="error-message" role="alert"></p>
             </div>
 
             <div class="form-field" id="field-date">
               <label for="item_date">Date</label>
-              <input type="date" id="item_date" name="item_date" required />
+              <input type="date" id="item_date" name="item_date" max="<?php echo date('Y-m-d'); ?>"
+                     value="<?php echo h($old['item_date'] ?? ''); ?>" required />
               <p class="error-message" role="alert"></p>
             </div>
           </div>
 
           <div class="form-field" id="field-location">
             <label for="location">Location</label>
-            <input type="text" id="location" name="location" placeholder="e.g. Library, 2nd floor" required />
+            <input type="text" id="location" name="location" placeholder="e.g. Library, 2nd floor"
+                   value="<?php echo h($old['location'] ?? ''); ?>" required />
             <p class="error-message" role="alert"></p>
           </div>
 
           <div class="form-field" id="field-description">
             <label for="description">Description</label>
-            <textarea id="description" name="description" placeholder="Color, brand, distinguishing marks, contents..." required></textarea>
+            <textarea id="description" name="description"
+                      placeholder="Colour, brand, distinguishing marks, contents..." required><?php echo h($old['description'] ?? ''); ?></textarea>
             <p class="error-message" role="alert"></p>
           </div>
 
           <div class="form-field" id="field-image">
             <label for="item_image">Photo <span class="text-muted">(optional)</span></label>
             <input type="file" id="item_image" name="item_image" accept="image/jpeg,image/png,image/webp" />
-            <p class="hint">JPG, PNG or WEBP, up to 3 MB.</p>
+            <p class="hint">JPG, PNG or WEBP, up to 3 MB. (Browsers can&rsquo;t refill a file field, so choose the photo again if the form reloads.)</p>
             <p class="error-message" role="alert"></p>
           </div>
 
@@ -109,14 +95,4 @@ require 'auth-check.php';
     </div>
   </section>
 
-  <footer class="site-footer">
-    <div class="container">
-      <span>&copy; 2026 Campus Lost &amp; Found</span>
-      <span>Built as a student systems project</span>
-    </div>
-  </footer>
-
-  <script src="js/main.js"></script>
-  <script src="js/validation.js"></script>
-</body>
-</html>
+<?php require 'footer.php'; ?>

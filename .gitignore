@@ -1,0 +1,13 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor settings
+.vscode/
+.idea/
+
+# User-uploaded photos should not live in Git
+uploads/
+
+# Logs
+*.log

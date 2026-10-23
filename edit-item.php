@@ -1,9 +1,10 @@
 <?php
-// edit-item.php — lets a user edit ONLY their own report.
-// GET: show the pre-filled form. POST: validate and update.
+// edit-item.php — edit ONE of your own reports.
+//   GET  -> show the form, pre-filled
+//   POST -> validate and save (optionally adding / replacing the photo)
 
-require 'auth-check.php';
-require 'db.php';
+require_once 'auth-check.php';
+require_once 'db.php';
 
 $itemId = (int) ($_GET['item_id'] ?? $_POST['item_id'] ?? 0);
 
@@ -11,180 +12,138 @@ $stmt = $pdo->prepare('SELECT * FROM items WHERE item_id = ?');
 $stmt->execute([$itemId]);
 $item = $stmt->fetch();
 
-if (!$item) {
-    echo "That item doesn't exist. <a href='dashboard.php'>Back to dashboard</a>.";
-    exit;
+// Ownership check — the security-critical line of this file. Without it,
+// anyone could edit anyone's report by changing item_id in the URL.
+// (One message for "doesn't exist" and "not yours" so we leak nothing.)
+if (!$item || (int) $item['user_id'] !== current_user_id()) {
+    flash_set('error', "That report wasn't found, or it isn't yours.");
+    redirect('dashboard.php');
 }
 
-// Ownership check — this is the security-critical line in this whole file.
-// Without it, any logged-in user could edit anyone else's report just by
-// changing the item_id in the URL.
-if ($item['user_id'] !== $_SESSION['user_id']) {
-    echo "You can only edit your own reports. <a href='dashboard.php'>Back to dashboard</a>.";
-    exit;
+// Once a claim is in progress (or it's resolved) the report is frozen,
+// so the details can't change under the admin's feet.
+if ($item['status'] !== 'active') {
+    flash_set('error', 'This report can no longer be edited because a claim is in progress or it has ended.');
+    redirect('dashboard.php');
 }
-
-$errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $itemName    = trim($_POST['item_name'] ?? '');
-    $category    = $_POST['category'] ?? '';
-    $description = trim($_POST['description'] ?? '');
-    $location    = trim($_POST['location'] ?? '');
-    $itemDate    = $_POST['item_date'] ?? '';
+    verify_csrf();
 
-    $allowedCategories = ['electronics', 'accessories', 'documents', 'bags', 'other'];
+    $itemName    = post_value('item_name');
+    $category    = post_value('category');
+    $description = post_value('description');
+    $location    = post_value('location');
+    $itemDate    = post_value('item_date');
 
-    if (strlen($itemName) < 3) {
-        $errors[] = 'Give the item a short, specific name.';
-    }
-    if (!in_array($category, $allowedCategories, true)) {
-        $errors[] = 'Choose a valid category.';
-    }
-    if (strlen($description) < 10) {
-        $errors[] = 'Add a few more details in the description.';
-    }
-    if (strlen($location) < 2) {
-        $errors[] = 'Tell us roughly where this happened.';
-    }
-    if ($itemDate === '' || strtotime($itemDate) > time()) {
-        $errors[] = 'Choose a valid date that is not in the future.';
-    }
-
+    $errors   = validate_item_input($itemName, $category, $description, $location, $itemDate);
+    $newImage = null;
     if (empty($errors)) {
-        // WHERE item_id = ? AND user_id = ? — the user_id check here is a
-        // second, redundant safety net on top of the check above; even if
-        // someone found a way around the first check, this query still
-        // can't touch a row that isn't theirs.
-        $updateStmt = $pdo->prepare(
-            'UPDATE items SET item_name = ?, category = ?, description = ?, location = ?, item_date = ?
-             WHERE item_id = ? AND user_id = ?'
-        );
-        $updateStmt->execute([
-            $itemName, $category, $description, $location, $itemDate,
-            $itemId, $_SESSION['user_id'],
-        ]);
-
-        header('Location: dashboard.php?updated=1');
-        exit;
+        $newImage = process_image_upload('item_image', $errors);
     }
 
-    // Validation failed — keep the submitted values so the form doesn't
-    // clear itself, by overwriting $item with what was just typed.
-    $item['item_name']   = $itemName;
-    $item['category']    = $category;
-    $item['description'] = $description;
-    $item['location']    = $location;
-    $item['item_date']   = $itemDate;
-}
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Edit report — Campus Lost &amp; Found</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
-  <link rel="stylesheet" href="css/style.css" />
-</head>
-<body>
+    if (!empty($errors)) {
+        flash_errors($errors);
+        remember_input([
+            'item_name' => $itemName, 'category' => $category, 'description' => $description,
+            'location' => $location, 'item_date' => $itemDate,
+        ]);
+        redirect('edit-item.php?item_id=' . $itemId);
+    }
 
-  <header class="site-nav">
-    <div class="container">
-      <a class="brand" href="index.html">Campus Lost &amp; Found <span>desk</span></a>
-      <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="dashboard.php">Browse items</a></li>
-        <li><a href="report-item.php">Report an item</a></li>
-        <li><a href="logout.php">Log out</a></li>
-      </ul>
-    </div>
-  </header>
+    // user_id in the WHERE clause is a second, independent ownership guard.
+    if ($newImage !== null) {
+        $update = $pdo->prepare(
+            "UPDATE items SET item_name = ?, category = ?, description = ?, location = ?, item_date = ?, image_path = ?
+             WHERE item_id = ? AND user_id = ? AND status = 'active'"
+        );
+        $update->execute([$itemName, $category, $description, $location, $itemDate, $newImage, $itemId, current_user_id()]);
+        delete_image_file($item['image_path']);          // the replaced photo is no longer needed
+    } else {
+        $update = $pdo->prepare(
+            "UPDATE items SET item_name = ?, category = ?, description = ?, location = ?, item_date = ?
+             WHERE item_id = ? AND user_id = ? AND status = 'active'"
+        );
+        $update->execute([$itemName, $category, $description, $location, $itemDate, $itemId, current_user_id()]);
+    }
+
+    flash_set('success', 'Your report was updated.');
+    redirect('dashboard.php');
+}
+
+// Show the form. If the last attempt failed, typed values win over saved ones.
+$values     = array_merge($item, pull_old());
+$pageTitle  = 'Edit report';
+$activePage = '';
+require 'header.php';
+?>
 
   <section class="section">
     <div class="container">
 
       <div class="form-card" style="max-width:600px;">
         <h2>Edit your report</h2>
-
-        <?php if (!empty($errors)): ?>
-          <div class="alert alert-error">
-            <?php echo implode('<br>', array_map('htmlspecialchars', $errors)); ?>
-          </div>
-        <?php endif; ?>
-
         <p class="text-muted" style="margin-bottom:1.5rem;">
-          Reporting as: <strong><?php echo htmlspecialchars($item['item_type']); ?></strong>
-          (the lost/found type can't be changed after reporting)
+          Reporting as: <strong><?php echo h(ucfirst($item['item_type'])); ?></strong>
+          (the lost/found type can&rsquo;t be changed after reporting).
         </p>
 
-        <form method="post" action="edit-item.php">
+        <form action="edit-item.php" method="post" enctype="multipart/form-data">
+          <?php echo csrf_field(); ?>
           <input type="hidden" name="item_id" value="<?php echo (int) $item['item_id']; ?>" />
 
           <div class="form-field">
             <label for="item_name">Item name</label>
-            <input type="text" id="item_name" name="item_name"
-              value="<?php echo htmlspecialchars($item['item_name']); ?>" required />
+            <input type="text" id="item_name" name="item_name" value="<?php echo h($values['item_name']); ?>" required />
           </div>
 
           <div class="form-row form-row-2">
             <div class="form-field">
               <label for="category">Category</label>
               <select id="category" name="category" required>
-                <?php
-                $categories = [
-                    'electronics'  => 'Electronics',
-                    'accessories'  => 'Accessories',
-                    'documents'    => 'Documents / ID cards',
-                    'bags'         => 'Bags',
-                    'other'        => 'Other',
-                ];
-                foreach ($categories as $value => $label) {
-                    $selected = ($item['category'] === $value) ? 'selected' : '';
-                    echo "<option value=\"$value\" $selected>$label</option>";
-                }
-                ?>
+                <?php foreach (CATEGORIES as $value => $label): ?>
+                  <option value="<?php echo h($value); ?>" <?php echo $values['category'] === $value ? 'selected' : ''; ?>>
+                    <?php echo h($label); ?>
+                  </option>
+                <?php endforeach; ?>
               </select>
             </div>
 
             <div class="form-field">
               <label for="item_date">Date</label>
-              <input type="date" id="item_date" name="item_date"
-                value="<?php echo htmlspecialchars($item['item_date']); ?>" required />
+              <input type="date" id="item_date" name="item_date" max="<?php echo date('Y-m-d'); ?>"
+                     value="<?php echo h($values['item_date']); ?>" required />
             </div>
           </div>
 
           <div class="form-field">
             <label for="location">Location</label>
-            <input type="text" id="location" name="location"
-              value="<?php echo htmlspecialchars($item['location']); ?>" required />
+            <input type="text" id="location" name="location" value="<?php echo h($values['location']); ?>" required />
           </div>
 
           <div class="form-field">
             <label for="description">Description</label>
-            <textarea id="description" name="description" required><?php echo htmlspecialchars($item['description']); ?></textarea>
+            <textarea id="description" name="description" required><?php echo h($values['description']); ?></textarea>
+          </div>
+
+          <div class="form-field">
+            <?php if ($item['image_path']): ?>
+              <label>Current photo</label>
+              <img class="photo-preview" src="<?php echo h($item['image_path']); ?>" alt="Photo of <?php echo h($item['item_name']); ?>" />
+              <label for="item_image">Replace photo <span class="text-muted">(optional)</span></label>
+            <?php else: ?>
+              <label for="item_image">Add a photo <span class="text-muted">(optional)</span></label>
+            <?php endif; ?>
+            <input type="file" id="item_image" name="item_image" accept="image/jpeg,image/png,image/webp" />
+            <p class="hint">JPG, PNG or WEBP, up to 3 MB.</p>
           </div>
 
           <button type="submit" class="btn btn-primary btn-block">Save changes</button>
+          <p style="margin-top:1rem; text-align:center;"><a href="dashboard.php#my-reports">Cancel</a></p>
         </form>
       </div>
 
     </div>
   </section>
 
-  <footer class="site-footer">
-    <div class="container">
-      <span>&copy; 2026 Campus Lost &amp; Found</span>
-      <span>Built as a student systems project</span>
-    </div>
-  </footer>
-
-  <script src="js/main.js"></script>
-</body>
-</html>
+<?php require 'footer.php'; ?>
